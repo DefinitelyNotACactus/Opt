@@ -54,11 +54,10 @@ void printSubtour(const std::vector<int> &subtour) {
     std::cout << "\n";
 }
 
-Tree buildTree(Data &data, double upperBound, int strategy, bool lagragean) {
+Tree buildTree(Data &data, double upperBound, int strategy) {
     int dimension = data.getDimension();
     Tree tree;
     tree.start = std::chrono::steady_clock::now();
-    Node root;
     // Computar um upper bound, utilizando o vizinho mais próximo
     if (upperBound < 0) {
         nearestNeighbor(tree.solution, data.getMatrixCost(), dimension);
@@ -69,34 +68,32 @@ Tree buildTree(Data &data, double upperBound, int strategy, bool lagragean) {
     }
     std::cout << "Starting UB: " << tree.upperBound << "\n";
     // Chamar o algoritmo hungaro na raiz
-    if (!lagragean) {
-        computeSolution(root, data, dimension, tree.upperBound);
-    } else {
-        Kruskal kruskal(data, tree.upperBound, 1);
-        root.multipliers = kruskal.getMultipliers();
-        root.multipliersSum = kruskal.getMultipliersSum();
-        root.forbiddenEdges = kruskal.getNewForbiddenEdges();
-        root.lowerBound = kruskal.getCost();
-    }
+    Node root;
     // Percorrer a árvore de acordo com a estratégia escolhida
     switch (strategy) {
         case 0:
-            traverseTreeDFS(data, tree, root, lagragean);
+            computeSolution(root, data, dimension, tree.upperBound);
+            traverseTreeDFS(data, tree, root);
             break;
         case 1:
-            traverseTreeBFS(data, tree, root, lagragean);
+            computeSolution(root, data, dimension, tree.upperBound);
+            traverseTreeBFS(data, tree, root);
             break;
         case 2:
-            traverseTreeBestBound(data, tree, root, lagragean);
+            computeSolution(root, data, dimension, tree.upperBound);
+            traverseTreeBestBound(data, tree, root);
             break;
-        default:
-            traverseTreeDFS(data, tree, root, lagragean);
+        case 3:
+            Lagrange lagr = Lagrange(data.getDimension());
+            lagr.solve(data.getMatrixCost(), tree.upperBound, 1, 10);
+            traverseTreeDFSLagrange(data, tree, lagr);
+            break;
     }
     
     return tree;
 }
 
-void traverseTreeBestBound(Data &data, Tree &tree, Node &root, bool lagragean) {
+void traverseTreeBestBound(Data &data, Tree &tree, Node &root) {
     std::priority_queue<Node, std::vector<Node>, std::greater<Node>> nodes;
     nodes.push(root);
     while (!nodes.empty()) {
@@ -151,7 +148,7 @@ void traverseTreeBestBound(Data &data, Tree &tree, Node &root, bool lagragean) {
     }
 }
 
-void traverseTreeBFS(Data &data, Tree &tree, Node &root, bool lagragean) {
+void traverseTreeBFS(Data &data, Tree &tree, Node &root) {
     std::queue<Node> nodes;
     nodes.push(root);
     while (!nodes.empty()) {
@@ -206,7 +203,7 @@ void traverseTreeBFS(Data &data, Tree &tree, Node &root, bool lagragean) {
     }
 }
 
-void traverseTreeDFS(Data &data, Tree &tree, Node &root, bool lagragean) {
+void traverseTreeDFS(Data &data, Tree &tree, Node &root) {
     std::stack<Node> nodes;
     nodes.push(root);
     while (!nodes.empty()) {
@@ -261,6 +258,55 @@ void traverseTreeDFS(Data &data, Tree &tree, Node &root, bool lagragean) {
     }
 }
 
+void traverseTreeDFSLagrange(Data &data, Tree &tree, Lagrange &root) {
+    std::stack<Lagrange> nodes;
+    nodes.push(root);
+    while (!nodes.empty()) {
+        auto now = std::chrono::steady_clock::now();
+        if (std::chrono::duration_cast<std::chrono::seconds>(now - tree.start).count() > TIMEOUT) {
+            std::cout << "Timeout\n";
+            break;
+        }
+        Lagrange top = nodes.top();
+        nodes.pop();
+        if (top.getLB() >= tree.upperBound) {
+            continue;
+        }
+        for (auto edge : top.getBranches()) {
+            Lagrange n = Lagrange(top.getForbiddenEdges(), top.getMultipliers());
+            n.addForbiddenEdge(edge);
+            n.solve(data.getMatrixCost(), tree.upperBound, 1, 10);
+            std::cout << "Tree Size: " << nodes.size() + 1 << " | " << "LB: " << n.getLB() << " | " << "UB: " << tree.upperBound << "\n";
+            if (n.isFeasible()) { // Encontramos uma solução viável
+                // Tentar melhorar uma solução viável por meio de movimentos de vizinhança
+                //rvnd(data, n.subtours[0], n.lowerBound);
+                if (n.getLB() < tree.upperBound) {
+                    tree.upperBound = n.getLB();
+                    std::cout << "New UB: " << tree.upperBound << "\n";
+                    if(!nodes.empty()) {
+                        std::stack<Lagrange> nodes_aux; // Podar a árvore
+                        nodes_aux.push(nodes.top());
+                        nodes.pop();
+                        while(!nodes.empty()) {
+                            Lagrange s = nodes.top();
+                            nodes.pop();
+                            if (s.getLB() < tree.upperBound) {
+                                nodes_aux.push(s);
+                            }
+                        }
+                        nodes = nodes_aux;
+                    }
+                } else {
+                    std::cout << "Encontrada solução viável (Custo = " << n.getLB() << ")\n";
+                }
+            }
+            if (!n.shouldPrune()) {
+                nodes.push(n);
+            }
+        }
+    }
+}
+
 void computeSolution(Node &node, Data &data, int dimension, double upperBound) {
     double **matrix = new double*[dimension];
     for (int i = 0; i < dimension; i++){
@@ -295,21 +341,6 @@ void computeSolution(Node &node, Data &data, int dimension, double upperBound) {
     hungarian_free(&p);
     for (int i = 0; i < dimension; i++) delete [] matrix[i];
     delete [] matrix;
-}
-
-std::vector<std::pair<int, int>> computeSolutionLagrangean(Node &node, Data &data, int dimension, double upperBound) {
-    Kruskal kruskal(data.getMatrixCost(), dimension, upperBound, 1, node.multipliersSum, node.multipliers, node.forbiddenEdges);
-    double objValue = kruskal.getCost();
-    std::cout << "LB: " << objValue << " UB: " << upperBound << "\n";
-    if (objValue > upperBound) {
-        node.prune = true;
-    } else {
-        node.prune = false;
-        node.lowerBound = objValue;
-        node.multipliers = kruskal.getMultipliers();
-        node.multipliersSum = kruskal.getMultipliersSum();
-    }
-    return kruskal.getNewForbiddenEdges();
 }
 
 int chooseSubtour(const std::vector<std::vector<int>> &subtours) {

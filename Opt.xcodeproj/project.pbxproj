@@ -7,7 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6334D5B928BB8A2400F7F0FD /* Heuristics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6334D5B728BB8A2400F7F0FD /* Heuristics.cpp */; };
+		6334D5BC28BBCBC600F7F0FD /* hungarian.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6334D5BA28BBCBC600F7F0FD /* hungarian.cpp */; };
+		6334D5BF28BBCC1900F7F0FD /* data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6334D5BD28BBCC1900F7F0FD /* data.cpp */; };
+		6334D5C228BBD72900F7F0FD /* BranchBound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6334D5C028BBD72900F7F0FD /* BranchBound.cpp */; };
+		63594EEB28D0C7EC0092C4D1 /* Kruskal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63594EE928D0C7EC0092C4D1 /* Kruskal.cpp */; };
+		6399446C28F476D70007DA02 /* Lagrange.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6399446A28F476D70007DA02 /* Lagrange.cpp */; };
 		63B147AF28BA88E20000BC88 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63B147AE28BA88E20000BC88 /* main.cpp */; };
+		63B147B728BA8AD60000BC88 /* readData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63B147B528BA8AD60000BC88 /* readData.cpp */; };
+		63F9114928E227A50007B6D7 /* Util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63F9114728E227A50007B6D7 /* Util.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,8 +31,24 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		6334D5B728BB8A2400F7F0FD /* Heuristics.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Heuristics.cpp; sourceTree = "<group>"; };
+		6334D5B828BB8A2400F7F0FD /* Heuristics.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Heuristics.hpp; sourceTree = "<group>"; };
+		6334D5BA28BBCBC600F7F0FD /* hungarian.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = hungarian.cpp; sourceTree = "<group>"; };
+		6334D5BB28BBCBC600F7F0FD /* hungarian.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = hungarian.hpp; sourceTree = "<group>"; };
+		6334D5BD28BBCC1900F7F0FD /* data.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = data.cpp; sourceTree = "<group>"; };
+		6334D5BE28BBCC1900F7F0FD /* data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = data.hpp; sourceTree = "<group>"; };
+		6334D5C028BBD72900F7F0FD /* BranchBound.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BranchBound.cpp; sourceTree = "<group>"; };
+		6334D5C128BBD72900F7F0FD /* BranchBound.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = BranchBound.hpp; sourceTree = "<group>"; };
+		63594EE928D0C7EC0092C4D1 /* Kruskal.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Kruskal.cpp; sourceTree = "<group>"; };
+		63594EEA28D0C7EC0092C4D1 /* Kruskal.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Kruskal.hpp; sourceTree = "<group>"; };
+		6399446A28F476D70007DA02 /* Lagrange.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Lagrange.cpp; sourceTree = "<group>"; };
+		6399446B28F476D70007DA02 /* Lagrange.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Lagrange.hpp; sourceTree = "<group>"; };
 		63B147AB28BA88E20000BC88 /* Opt */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Opt; sourceTree = BUILT_PRODUCTS_DIR; };
 		63B147AE28BA88E20000BC88 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		63B147B528BA8AD60000BC88 /* readData.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = readData.cpp; sourceTree = "<group>"; };
+		63B147B628BA8AD60000BC88 /* readData.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = readData.hpp; sourceTree = "<group>"; };
+		63F9114728E227A50007B6D7 /* Util.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Util.cpp; sourceTree = "<group>"; };
+		63F9114828E227A50007B6D7 /* Util.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Util.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,7 +65,7 @@
 		63B147A228BA88E20000BC88 = {
 			isa = PBXGroup;
 			children = (
-				63B147AD28BA88E20000BC88 /* Opt */,
+				63B147AD28BA88E20000BC88 /* src */,
 				63B147AC28BA88E20000BC88 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,12 +78,28 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		63B147AD28BA88E20000BC88 /* Opt */ = {
+		63B147AD28BA88E20000BC88 /* src */ = {
 			isa = PBXGroup;
 			children = (
 				63B147AE28BA88E20000BC88 /* main.cpp */,
+				6334D5BA28BBCBC600F7F0FD /* hungarian.cpp */,
+				6334D5BB28BBCBC600F7F0FD /* hungarian.hpp */,
+				6334D5B728BB8A2400F7F0FD /* Heuristics.cpp */,
+				6334D5B828BB8A2400F7F0FD /* Heuristics.hpp */,
+				63B147B528BA8AD60000BC88 /* readData.cpp */,
+				63B147B628BA8AD60000BC88 /* readData.hpp */,
+				6334D5BD28BBCC1900F7F0FD /* data.cpp */,
+				6334D5BE28BBCC1900F7F0FD /* data.hpp */,
+				6334D5C028BBD72900F7F0FD /* BranchBound.cpp */,
+				6334D5C128BBD72900F7F0FD /* BranchBound.hpp */,
+				63594EE928D0C7EC0092C4D1 /* Kruskal.cpp */,
+				63594EEA28D0C7EC0092C4D1 /* Kruskal.hpp */,
+				63F9114728E227A50007B6D7 /* Util.cpp */,
+				63F9114828E227A50007B6D7 /* Util.hpp */,
+				6399446A28F476D70007DA02 /* Lagrange.cpp */,
+				6399446B28F476D70007DA02 /* Lagrange.hpp */,
 			);
-			path = Opt;
+			path = src;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -89,7 +129,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 1340;
+				LastUpgradeCheck = 1400;
 				TargetAttributes = {
 					63B147AA28BA88E20000BC88 = {
 						CreatedOnToolsVersion = 13.4.1;
@@ -119,7 +159,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6334D5B928BB8A2400F7F0FD /* Heuristics.cpp in Sources */,
 				63B147AF28BA88E20000BC88 /* main.cpp in Sources */,
+				63594EEB28D0C7EC0092C4D1 /* Kruskal.cpp in Sources */,
+				6334D5C228BBD72900F7F0FD /* BranchBound.cpp in Sources */,
+				63B147B728BA8AD60000BC88 /* readData.cpp in Sources */,
+				6334D5BF28BBCC1900F7F0FD /* data.cpp in Sources */,
+				6334D5BC28BBCBC600F7F0FD /* hungarian.cpp in Sources */,
+				6399446C28F476D70007DA02 /* Lagrange.cpp in Sources */,
+				63F9114928E227A50007B6D7 /* Util.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -159,6 +207,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -217,6 +266,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -238,7 +288,9 @@
 		63B147B328BA88E20000BC88 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -246,7 +298,9 @@
 		63B147B428BA88E20000BC88 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

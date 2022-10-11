@@ -14,14 +14,12 @@
 #include "hungarian.hpp"
 #include "Heuristics.hpp"
 #include "data.hpp"
-#include "Kruskal.hpp"
+#include "Lagrange.hpp"
 
 struct Node {
     std::vector<std::pair<int, int>> forbiddenEdges;
-    //std::vector<int> forbiddenEdgesWeights;
-    std::vector<double> multipliers;
     std::vector<std::vector<int>> subtours;
-    double lowerBound, multipliersSum;
+    double lowerBound;
     int chosen;
     bool prune;
     
@@ -39,10 +37,11 @@ struct Tree {
 std::vector<std::vector<int>> getSubtours(hungarian_problem_t &);
 void printSubtours(const std::vector<std::vector<int>> &);
 void printSubtour(const std::vector<int> &);
-Tree buildTree(Data &, double = -1, int = 0, bool = false);
-void traverseTreeDFS(Data &, Tree &, Node &, bool);
-void traverseTreeBestBound(Data &, Tree &, Node &, bool);
-void traverseTreeBFS(Data &, Tree &, Node &, bool);
+Tree buildTree(Data &, double = -1, int = 0);
+void traverseTreeDFS(Data &, Tree &, Node &);
+void traverseTreeDFSLagrange(Data &, Tree &, Lagrange &);
+void traverseTreeBestBound(Data &, Tree &, Node &);
+void traverseTreeBFS(Data &, Tree &, Node &);
 void computeSolution(Node &, Data &, int, double);
 std::vector<std::pair<int, int>> computeSolutionLagrangean(Node &, Data &, int, double);
 int chooseSubtour(const std::vector<std::vector<int>> &);

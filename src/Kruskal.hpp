@@ -16,14 +16,7 @@ struct Vertex {
     int degree;
     std::vector<int> adjacencyList;
     
-    Vertex(int index, int degree): index(index), degree(degree) { };
-};
-
-struct Set {
-    int parent;
-    int value;
-    
-    Set(int parent, int value): parent(parent), value(value) { };
+    Vertex(int index): index(index), degree(0) { };
 };
 
 struct Edge {
@@ -37,34 +30,22 @@ struct Edge {
 
 class Kruskal {
 public:
-    Kruskal(Data &, double, double);
-    Kruskal(double **, int, double, double, double, std::vector<double>, const std::vector<std::pair<int, int>> &);
-    ~Kruskal();
+    Kruskal(double **, int);
     
     void printTreeInfo();
     double getCost();
-    double getMultipliersSum();
-    double **getCostMatrix() { return costMatrix; };
-    std::vector<double> getMultipliers();
-    std::vector<std::pair<int, int>> getNewForbiddenEdges();
+    Vertex getVertex(int);
     
 private:
     std::vector<Vertex> vertices;
-    std::vector<Set> sets;
     std::vector<Edge> mst;
-    std::vector<double> multipliers, subgradient;
-    double e, w, cost, subgradientSum, multipliersSum;
-    double **costMatrix;
-    int dimension;
+    std::vector<int> sets;
+    double cost;
+    const int dimension;
     
     int findSet(int);
     void unionSet(int, int);
-    void build1Tree();
-    void connectFirstVertex();
-    void updateSubgradient();
-    void updateMultipliers();
-    void updateCostMatrix();
-    std::vector<Edge> buildEdges();
+    void insertEdge(Edge);
 };
 
 #endif /* Kruskal_hpp */

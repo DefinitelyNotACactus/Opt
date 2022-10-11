@@ -6,196 +6,75 @@
 //
 
 #include "Kruskal.hpp"
+#include "Util.hpp"
 
-Kruskal::Kruskal(Data &data, double w, double e) : Kruskal(data.getMatrixCost(), data.getDimension(), w, e, 0, std::vector<double>(data.getDimension(), 0), std::vector<std::pair<int, int>>()) { }
-
-Kruskal::Kruskal(double **distMatrix, int dimension, double w, double e, double multipliersSum, std::vector<double> multipliers, const std::vector<std::pair<int, int>> &forbiddenEdges) : costMatrix(new double*[dimension]), cost(0), subgradientSum(0), dimension(dimension), w(w), e(e), multipliersSum(multipliersSum), multipliers(multipliers) {
-//    this->costMatrix = new double*[dimension];
+Kruskal::Kruskal(double **distMatrix, int dimension) : dimension(dimension), cost(0) {
     for(int i = 0; i < dimension; i++) {
-        costMatrix[i] = new double[dimension];
-        for(int j = 0; j < dimension; j++) {
-            costMatrix[i][j] = distMatrix[i][j] - multipliers[i] - multipliers[j];
-        }
+        vertices.push_back(Vertex(i));
+        sets.push_back(i);
     }
-    for(std::pair<int, int> edge : forbiddenEdges) {
-        costMatrix[edge.first][edge.second] = INFINITE;
-    }
-    for(int itr = 0; getCost() < w; itr++) {
-        vertices.clear();
-        sets.clear();
-        mst.clear();
-        for(int i = 0; i < dimension; i++) {
-            vertices.push_back(Vertex(i, 0));
-            sets.push_back(Set(i, 0));
-            if(itr == 0) {
-                subgradient.push_back(0);
-            }
-        }
-        build1Tree();
-        connectFirstVertex();
-        updateSubgradient();
-        updateMultipliers();
-        updateCostMatrix();
-        std::cout << "(Iteração " << itr << ")\n";
-        printTreeInfo();
-    }
-}
-
-Kruskal::~Kruskal() {
-    for(int i = 0; i < dimension; i++) delete [] costMatrix[i];
-    delete [] costMatrix;
-}
-
-int Kruskal::findSet(int index) {
-    if(sets[index].parent != index) {
-        sets[index].parent = findSet(sets[index].parent);
-    }
-    return sets[index].parent;
-}
-
-void Kruskal::unionSet(int a, int b) {
-    int rootA = findSet(a), rootB = findSet(b);
-    if(sets[rootA].value < sets[rootB].value) {
-        sets[rootA].parent = rootB;
-    } else if(sets[rootA].value > sets[rootB].value) {
-        sets[rootB].parent = rootA;
-    } else {
-        sets[rootB].parent = rootA;
-        sets[rootA].value++;
-    }
-}
-
-std::vector<Edge> Kruskal::buildEdges() {
+    // Obter as arestas do grafo
     std::vector<Edge> edges;
     for(int i = 1; i < dimension; i++) {
         for(int j = i + 1; j < dimension; j++) {
-            if(costMatrix[i][j] < INFINITE) {
-                edges.push_back(Edge(i, j, costMatrix[i][j]));
+            if(distMatrix[i][j] < INFINITE) {
+                edges.push_back(Edge(i, j, distMatrix[i][j]));
             }
         }
     }
-    return edges;
-}
-
-void Kruskal::printTreeInfo() {
-    for(Vertex vertex : vertices) {
-        std::cout << vertex.index << ":";
-        for(int adj : vertex.adjacencyList) {
-            std::cout << " " << adj;
-        }
-        std::cout << " (Degree = " << vertex.degree << ")\n";
-    }
-    std::cout << "Cost: " << getCost() << "\n";
-    std::cout << "U = (";
-    for(int i = 0; i < dimension - 1; i++) {
-        std::cout << multipliers[i] << ", ";
-    }
-    std::cout << multipliers[dimension - 1] << ")\n";
-    std::cout << "G = (";
-    for(int i = 0; i < dimension - 1; i++) {
-        std::cout << subgradient[i] << ", ";
-    }
-    std::cout << subgradient[dimension - 1] << ")\n";
-}
-
-// Atualizar os subgradientes
-void Kruskal::updateSubgradient() {
-    subgradientSum = 0;
-    for(int i = 0; i < dimension; i++) {
-        subgradient[i] = 2 - vertices[i].degree;
-        subgradientSum += (2 - vertices[i].degree) * (2 - vertices[i].degree);
-    }
-}
-
-void Kruskal::updateMultipliers() {
-    std::vector<double> newMultipliers;
-    multipliersSum = 0;
-    double constantTerm = e * ((w - cost) / subgradientSum);
-    for(int i = 0; i < dimension; i++) {
-        newMultipliers.push_back(multipliers[i] + constantTerm * subgradient[i]);
-        multipliersSum += multipliers[i] + constantTerm * subgradient[i];
-    }
-    multipliers = newMultipliers;
-}
-
-void Kruskal::build1Tree() {
-    std::vector<Edge> edges = buildEdges();
     // Construir a 1-Arvore
-    std::sort(edges.begin(), edges.end());
-    for(int i = 0; mst.size() < dimension - 2; i++) {
-        Edge edge = edges[i];
-        int a = findSet(edge.a), b = findSet(edge.b);
-        if (a != b) {
-            mst.push_back(edge);
-            cost += edge.weight;
-            unionSet(a, b);
-            vertices[a].degree++;
-            vertices[a].adjacencyList.push_back(b);
-            vertices[b].degree++;
-            vertices[b].adjacencyList.push_back(a);
+    std::sort(edges.begin(), edges.end(), std::less<Edge>());
+    for(Edge edge : edges) {
+        if (findSet(edge.a) != findSet(edge.b)) {
+            unionSet(edge.a, edge.b);
+            insertEdge(edge);
+            if(mst.size() == dimension - 2) break;
         }
     }
-}
-
-// Conectar o primeiro vértice a arvore
-void Kruskal::connectFirstVertex() {
+    if(mst.size() != dimension - 2) {
+        cost = INFINITE;
+        return;
+    }
     std::vector<Edge> edges1;
     for(int i = 1; i < dimension; i++) {
-        if(costMatrix[0][i] < INFINITE) {
-            edges1.push_back(Edge(0, i, costMatrix[0][i]));
+        if(distMatrix[0][i] < INFINITE) {
+            edges1.push_back(Edge(0, i, distMatrix[0][i]));
         }
+    }
+    if(edges1.size() < 2) {
+        cost = INFINITE;
+        return;
     }
     // Adicionar as duas arestas menos custosas que saem do vértice 1
-    std::sort(edges1.begin(), edges1.end());
-    mst.push_back(edges1[0]);
-    cost += edges1[0].weight;
-    vertices[edges1[0].a].degree++;
-    vertices[edges1[0].a].adjacencyList.push_back(edges1[0].b);
-    vertices[edges1[0].b].degree++;
-    vertices[edges1[0].b].adjacencyList.push_back(edges1[0].a);
-    mst.push_back(edges1[1]);
-    cost += edges1[1].weight;
-    vertices[edges1[1].a].degree++;
-    vertices[edges1[1].a].adjacencyList.push_back(edges1[1].b);
-    vertices[edges1[1].b].degree++;
-    vertices[edges1[1].b].adjacencyList.push_back(edges1[1].a);
+    std::sort(edges1.begin(), edges1.end(), std::less<Edge>());
+    insertEdge(edges1[0]);
+    insertEdge(edges1[1]);
 }
 
-void Kruskal::updateCostMatrix() {
-    for(int i = 0; i < dimension; i++) {
-        for(int j = 0; j < dimension; j++) {
-            if(i != j and costMatrix[i][j] < INFINITE) {
-                costMatrix[i][j] = costMatrix[i][j] - multipliers[i] - multipliers[j];
-            }
-        }
+void Kruskal::insertEdge(Edge edge) {
+    mst.push_back(edge);
+    cost += edge.weight;
+    vertices[edge.a].degree++;
+    vertices[edge.a].adjacencyList.push_back(edge.b);
+    vertices[edge.b].degree++;
+    vertices[edge.b].adjacencyList.push_back(edge.a);
+}
+
+int Kruskal::findSet(int index) {
+    if(sets[index] != index) {
+        sets[index] = findSet(sets[index]);
     }
+    return sets[index];
+}
+
+void Kruskal::unionSet(int a, int b) {
+    sets[findSet(a)] = findSet(b);
 }
 
 double Kruskal::getCost() {
-    return cost + 2 * multipliersSum;
+    return cost;
 }
 
-double Kruskal::getMultipliersSum() {
-    return multipliersSum;
-}
-
-std::vector<double> Kruskal::getMultipliers() {
-    return multipliers;
-}
-
-std::vector<std::pair<int, int>> Kruskal::getNewForbiddenEdges() {
-    Vertex *highestDegree = &vertices[0];
-    std::vector<std::pair<int, int>> forbiddenEdges;
-    for(int i = 1; i < dimension; i++) {
-        if(vertices[i].degree > highestDegree->degree) {
-            highestDegree = &vertices[i];
-        }
-    }
-    for(int adj : highestDegree->adjacencyList) {
-        std::pair<int, int> forbiddenEdge;
-        forbiddenEdge.first = highestDegree->index;
-        forbiddenEdge.second = adj;
-        forbiddenEdges.push_back(forbiddenEdge);
-    }
-    return forbiddenEdges;
+Vertex Kruskal::getVertex(int index) {
+    return vertices[index];
 }
