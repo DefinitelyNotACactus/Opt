@@ -8,7 +8,7 @@ using namespace std;
 #include "hungarian.hpp"
 #include "BranchBound.hpp"
 #include "Kruskal.hpp"
-
+#include "Lagrange.hpp"
 int main(int argc, char** argv) {
     int strategy = 0;
     double upperBound = -1;
@@ -33,7 +33,8 @@ int main(int argc, char** argv) {
         }
         costVector.push_back(costVectorLine);
     }
-
+//    Lagrange lagr = Lagrange(data.getDimension());
+//    lagr.solve(cost, 3000, 1);
 //    hungarian_problem_t p;
 //    int mode = HUNGARIAN_MODE_MINIMIZE_COST;
 //    hungarian_init(&p, cost, data.getDimension(), data.getDimension(), mode); // Carregando o problema
@@ -48,10 +49,21 @@ int main(int argc, char** argv) {
     auto start = std::chrono::steady_clock::now();
     Tree tree = buildTree(data, upperBound, strategy);
     auto end = std::chrono::steady_clock::now();
-//    std::cout << chrono::duration_cast<chrono::milliseconds>(end - start).count() << ";" << tree.upperBound << "\n";
+    std::cout << "Time elapsed: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms | UB:" << tree.upperBound << "\n";
 //    hungarian_free(&p);
     
-//    Kruskal *kruskal = new Kruskal(data, 7000, 1);
+//    vvi dist;
+//    for(int i = 0; i < data.getDimension(); i++) {
+//        dist.push_back(std::vector<double>());
+//        for(int j = 0; j < data.getDimension(); j++) {
+//            dist[i].push_back(data.getDistance(i, j));
+//        }
+//    }
+//    Kruskal kruskal(dist);
+//    std::cout << kruskal.MST(data.getDimension()) << "\n";
+//    Kruskal kruskal(data.getMatrixCost(), data.getDimension());
+//    std::cout << kruskal.getCost() << "\n";
+//    Kruskal *kruskal = new Kruskal(data, 12000, 1);
 //    std::vector<std::pair<int, int>> forbidden = kruskal->getNewForbiddenEdges();
 //    for(auto pair : forbidden) {
 //        std::cout << "(" << pair.first << ", " << pair.second << ")\n";

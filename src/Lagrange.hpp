@@ -30,6 +30,9 @@ public:
     inline std::vector<std::pair<int, int>> getBranches() { return branchEdges; }
     inline std::vector<std::pair<int, int>> getForbiddenEdges() { return forbiddenEdges; }
     
+    inline bool operator <(const Lagrange &b) const { return lowerBound < b.lowerBound; }
+    inline bool operator >(const Lagrange &b) const { return lowerBound > b.lowerBound; }
+    
 private:
     std::vector<int> tour;
     std::vector<std::pair<int, int>> forbiddenEdges, branchEdges;

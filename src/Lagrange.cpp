@@ -1,13 +1,13 @@
 //
-//  Kruskal.cpp
+//  Lagrange.cpp
 //  Opt
 //
-//  Created by David Galvao on 13/09/22.
+//  Created by David Galvao on 10/10/22.
 //
 #include "Lagrange.hpp"
 #include "Kruskal.hpp"
 
-#define EPSILON 0.000001
+#define EPSILON 0.0000001
 
 Lagrange::Lagrange(int dimension) : Lagrange(std::vector<std::pair<int, int>>(), std::vector<double>(dimension, 0)) { }
 

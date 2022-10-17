@@ -9,6 +9,7 @@
 
 #include "BranchBound.hpp"
 
+#include <cstdio>
 #include <iostream>
 #include <queue>
 #include <stack>
@@ -69,6 +70,7 @@ Tree buildTree(Data &data, double upperBound, int strategy) {
     std::cout << "Starting UB: " << tree.upperBound << "\n";
     // Chamar o algoritmo hungaro na raiz
     Node root;
+    Lagrange lagr = Lagrange(data.getDimension());
     // Percorrer a árvore de acordo com a estratégia escolhida
     switch (strategy) {
         case 0:
@@ -84,9 +86,12 @@ Tree buildTree(Data &data, double upperBound, int strategy) {
             traverseTreeBestBound(data, tree, root);
             break;
         case 3:
-            Lagrange lagr = Lagrange(data.getDimension());
             lagr.solve(data.getMatrixCost(), tree.upperBound, 1, 10);
             traverseTreeDFSLagrange(data, tree, lagr);
+            break;
+        case 4:
+            lagr.solve(data.getMatrixCost(), tree.upperBound, 1, 10);
+            traverseTreeBestBoundLagrange(data, tree, lagr);
             break;
     }
     
@@ -142,6 +147,58 @@ void traverseTreeBestBound(Data &data, Tree &tree, Node &root) {
                 }
             }
             if (!n.prune) {
+                nodes.push(n);
+            }
+        }
+    }
+}
+
+void traverseTreeBestBoundLagrange(Data &data, Tree &tree, Lagrange &root) {
+    std::priority_queue<Lagrange, std::vector<Lagrange>, std::greater<Lagrange>> nodes;
+    nodes.push(root);
+    long itr = 0;
+    std::cout << "Nodes Left | Objective | Best Integer | Best Bound | Gap\n";
+    while (!nodes.empty()) {
+        itr++;
+        auto now = std::chrono::steady_clock::now();
+        if (std::chrono::duration_cast<std::chrono::seconds>(now - tree.start).count() > TIMEOUT) {
+            std::cout << "Timeout\n";
+            break;
+        }
+        Lagrange best = nodes.top();
+        if (best.getLB() > tree.upperBound) {
+            break;
+        }
+        nodes.pop();
+        for (auto edge : best.getBranches()) {
+            Lagrange n = Lagrange(best.getForbiddenEdges(), best.getMultipliers());
+            n.addForbiddenEdge(edge);
+            n.solve(data.getMatrixCost(), tree.upperBound, 1, 10);
+            std::cout << nodes.size() + 1 << " | " << n.getLB() << " | " << tree.upperBound << " | " << best.getLB() << " | " << abs((tree.upperBound - best.getLB()) / tree.upperBound) * 100 << "%\n";
+            if (n.isFeasible()) { // Encontramos uma solução viável
+                // Tentar melhorar uma solução viável por meio de movimentos de vizinhança
+                //rvnd(data, n.subtours[0], n.lowerBound);
+                if (n.getLB() < tree.upperBound) {
+                    tree.upperBound = n.getLB();
+                    std::cout << "(New UB: " << tree.upperBound << ")\n";
+                    if(!nodes.empty()) {
+                        std::priority_queue<Lagrange, std::vector<Lagrange>, std::greater<Lagrange>> nodes_aux; // Podar a árvore
+                        nodes_aux.push(nodes.top());
+                        nodes.pop();
+                        while(!nodes.empty()) {
+                            Lagrange s = nodes.top();
+                            nodes.pop();
+                            if (s.getLB() < tree.upperBound) {
+                                nodes_aux.push(s);
+                            }
+                        }
+                        nodes = nodes_aux;
+                    }
+                } else {
+                    std::cout << "(Feasible: " << n.getLB() << ")\n";
+                }
+            }
+            if (!n.shouldPrune()) {
                 nodes.push(n);
             }
         }
@@ -205,20 +262,36 @@ void traverseTreeBFS(Data &data, Tree &tree, Node &root) {
 
 void traverseTreeDFS(Data &data, Tree &tree, Node &root) {
     std::stack<Node> nodes;
+    std::priority_queue<double, std::vector<double>, std::greater<double>> bounds;
     nodes.push(root);
+    bounds.push(root.lowerBound);
+    printf("====================================================\n");
+    printf("Left | Objective | Best Int | Best Bound | Gap (%%) \n");
     while (!nodes.empty()) {
         auto now = std::chrono::steady_clock::now();
+        Node top = nodes.top();
         if (std::chrono::duration_cast<std::chrono::seconds>(now - tree.start).count() > TIMEOUT) {
-            std::cout << "Timeout\n";
+            printf("%4lu | %9.2f | %8.0f | %10.2f | %3.4f (Timeout)\n", nodes.size(), top.lowerBound, tree.upperBound, bounds.top(), abs((tree.upperBound - bounds.top()) / tree.upperBound) * 100);
             break;
         }
-        Node top = nodes.top();
         nodes.pop();
-        if (top.lowerBound > tree.upperBound) {
-            continue;
+        if(top.lowerBound == bounds.top()) {
+            bounds.pop();
+            std::stack<Node> nodes_aux;
+            std::priority_queue<double, std::vector<double>, std::greater<double>> bounds_aux;
+            while (!nodes.empty()) {
+                nodes_aux.push(nodes.top());
+                bounds_aux.push(nodes.top().lowerBound);
+                nodes.pop();
+            }
+            bounds = bounds_aux;
+            while (!nodes_aux.empty()) {
+                nodes.push(nodes_aux.top());
+                nodes_aux.pop();
+            }
         }
+        if (top.lowerBound > tree.upperBound) continue;
         for (int i = 0; i < top.subtours[top.chosen].size() - 1; i++) {
-            std::cout << "Tree Size: " << nodes.size() << " | ";
             Node n;
             n.forbiddenEdges = top.forbiddenEdges;
             std::pair<int, int> forbiddenEdge;
@@ -227,84 +300,117 @@ void traverseTreeDFS(Data &data, Tree &tree, Node &root) {
             n.forbiddenEdges.push_back(forbiddenEdge);
             //n.forbiddenEdgesWeights.push_back(data.getDistance(forbiddenEdge.first, forbiddenEdge.second));
             computeSolution(n, data, data.getDimension(), tree.upperBound);
+            printf("%4lu | %9.2f | %8.0f | %10.2f | %3.4f ", nodes.size(), n.lowerBound, tree.upperBound, bounds.top(), abs((tree.upperBound - bounds.top()) / tree.upperBound) * 100);
             if (n.subtours.size() == 1) { // Encontramos uma solução viável
                 n.prune = true;
                 // Tentar melhorar uma solução viável por meio de movimentos de vizinhança
                 rvnd(data, n.subtours[0], n.lowerBound);
                 if (n.lowerBound < tree.upperBound) {
                     tree.upperBound = n.lowerBound;
-                    std::cout << "New UB: " << tree.upperBound << "\n";
+                    printf("(New UB: %.0f)", tree.upperBound);
                     if(!nodes.empty()) {
                         std::stack<Node> nodes_aux; // Podar a árvore
+                        std::priority_queue<double, std::vector<double>, std::greater<double>> bounds_aux;
                         nodes_aux.push(nodes.top());
+                        bounds_aux.push(nodes.top().lowerBound);
                         nodes.pop();
                         while(!nodes.empty()) {
                             Node s = nodes.top();
                             nodes.pop();
                             if (s.lowerBound < tree.upperBound) {
                                 nodes_aux.push(s);
+                                bounds_aux.push(s.lowerBound);
                             }
                         }
-                        nodes = nodes_aux;
+                        bounds = bounds_aux;
+                        while (!nodes_aux.empty()) {
+                            nodes.push(nodes_aux.top());
+                            nodes_aux.pop();
+                        }
                     }
                 } else {
-                    std::cout << "Encontrada solução viável (Custo = " << n.lowerBound << ")\n";
+                    printf("(Integer: %.0f)", n.lowerBound);
                 }
             }
+            printf("\n");
             if (!n.prune) {
                 nodes.push(n);
+                bounds.push(n.lowerBound);
             }
         }
     }
+    printf("====================================================\n");
 }
 
 void traverseTreeDFSLagrange(Data &data, Tree &tree, Lagrange &root) {
     std::stack<Lagrange> nodes;
+    std::priority_queue<double, std::vector<double>, std::greater<double>> bounds;
     nodes.push(root);
+    bounds.push(root.getLB());
+    printf("====================================================\n");
+    printf("Left | Objective | Best Int | Best Bound | Gap (%%) \n");
     while (!nodes.empty()) {
         auto now = std::chrono::steady_clock::now();
+        Lagrange top = nodes.top();
         if (std::chrono::duration_cast<std::chrono::seconds>(now - tree.start).count() > TIMEOUT) {
-            std::cout << "Timeout\n";
+            printf("%4lu | %9.2f | %8.0f | %10.2f | %3.4f (Timeout)\n", nodes.size(), top.getLB(), tree.upperBound, bounds.top(), abs((tree.upperBound - bounds.top()) / tree.upperBound) * 100);
             break;
         }
-        Lagrange top = nodes.top();
         nodes.pop();
-        if (top.getLB() >= tree.upperBound) {
-            continue;
+        if(top.getLB() == bounds.top()) {
+            bounds.pop();
+            std::stack<Lagrange> nodes_aux;
+            std::priority_queue<double, std::vector<double>, std::greater<double>> bounds_aux;
+            while (!nodes.empty()) {
+                nodes_aux.push(nodes.top());
+                bounds_aux.push(nodes.top().getLB());
+                nodes.pop();
+            }
+            bounds = bounds_aux;
+            while (!nodes_aux.empty()) {
+                nodes.push(nodes_aux.top());
+                nodes_aux.pop();
+            }
         }
+        if (top.getLB() >= tree.upperBound) continue;
         for (auto edge : top.getBranches()) {
             Lagrange n = Lagrange(top.getForbiddenEdges(), top.getMultipliers());
             n.addForbiddenEdge(edge);
             n.solve(data.getMatrixCost(), tree.upperBound, 1, 10);
-            std::cout << "Tree Size: " << nodes.size() + 1 << " | " << "LB: " << n.getLB() << " | " << "UB: " << tree.upperBound << "\n";
+            printf("%4lu | %9.2f | %8.0f | %10.2f | %3.4f ", nodes.size(), n.getLB(), tree.upperBound, bounds.top(), abs((tree.upperBound - bounds.top()) / tree.upperBound) * 100);
             if (n.isFeasible()) { // Encontramos uma solução viável
-                // Tentar melhorar uma solução viável por meio de movimentos de vizinhança
-                //rvnd(data, n.subtours[0], n.lowerBound);
                 if (n.getLB() < tree.upperBound) {
                     tree.upperBound = n.getLB();
-                    std::cout << "New UB: " << tree.upperBound << "\n";
+                    printf("(New UB: %.0f)", tree.upperBound);
                     if(!nodes.empty()) {
                         std::stack<Lagrange> nodes_aux; // Podar a árvore
+                        std::priority_queue<double, std::vector<double>, std::greater<double>> bounds_aux;
                         nodes_aux.push(nodes.top());
+                        bounds_aux.push(nodes.top().getLB());
                         nodes.pop();
-                        while(!nodes.empty()) {
-                            Lagrange s = nodes.top();
+                        while (!nodes.empty()) {
+                            nodes_aux.push(nodes.top());
+                            bounds_aux.push(nodes.top().getLB());
                             nodes.pop();
-                            if (s.getLB() < tree.upperBound) {
-                                nodes_aux.push(s);
-                            }
                         }
-                        nodes = nodes_aux;
+                        bounds = bounds_aux;
+                        while (!nodes_aux.empty()) {
+                            nodes.push(nodes_aux.top());
+                            nodes_aux.pop();
+                        }
                     }
                 } else {
-                    std::cout << "Encontrada solução viável (Custo = " << n.getLB() << ")\n";
+                    printf("(Integer: %.0f)", n.getLB());
                 }
             }
+            printf("\n");
             if (!n.shouldPrune()) {
                 nodes.push(n);
+                bounds.push(n.getLB());
             }
         }
     }
+    printf("====================================================\n");
 }
 
 void computeSolution(Node &node, Data &data, int dimension, double upperBound) {
@@ -324,7 +430,6 @@ void computeSolution(Node &node, Data &data, int dimension, double upperBound) {
     hungarian_init(&p, matrix, dimension, dimension, HUNGARIAN_MODE_MINIMIZE_COST); // Carregando o problema
 
     double objValue = hungarian_solve(&p);
-    std::cout << "LB: " << objValue << " UB: " << upperBound << "\n";
     if (objValue > upperBound) {
         node.prune = true;
     } else {
@@ -333,10 +438,6 @@ void computeSolution(Node &node, Data &data, int dimension, double upperBound) {
         node.subtours = getSubtours(p);
         node.chosen = chooseSubtour(node.subtours);
     }
-    // Desfazer os valores das arestas proibidas
-//    for (int i = 0; i < node.forbiddenEdges.size(); i++) {
-//        data.getMatrixCost()[node.forbiddenEdges[i].first][node.forbiddenEdges[i].second] = node.forbiddenEdgesWeights[i];
-//    }
     // Desalocar
     hungarian_free(&p);
     for (int i = 0; i < dimension; i++) delete [] matrix[i];

@@ -41,6 +41,7 @@ Tree buildTree(Data &, double = -1, int = 0);
 void traverseTreeDFS(Data &, Tree &, Node &);
 void traverseTreeDFSLagrange(Data &, Tree &, Lagrange &);
 void traverseTreeBestBound(Data &, Tree &, Node &);
+void traverseTreeBestBoundLagrange(Data &, Tree &, Lagrange &);
 void traverseTreeBFS(Data &, Tree &, Node &);
 void computeSolution(Node &, Data &, int, double);
 std::vector<std::pair<int, int>> computeSolutionLagrangean(Node &, Data &, int, double);
